@@ -31,6 +31,7 @@ Set these in the Moodle web service:
 
 - `MOODLE_DB_TYPE=mariadb`
 - `MOODLE_DB_HOST=${{MySQL.MYSQLHOST}}`
+- `MOODLE_DB_PORT=${{MySQL.MYSQLPORT}}`
 - `MOODLE_DB_NAME=${{MySQL.MYSQLDATABASE}}`
 - `MOODLE_DB_USER=${{MySQL.MYSQLUSER}}`
 - `MOODLE_DB_PASS=${{MySQL.MYSQLPASSWORD}}`
@@ -42,11 +43,11 @@ Set these in the Moodle web service:
 - `MOODLE_ADMIN_PASS=ChangeThisToStrongPass123!`
 - `MOODLE_ADMIN_EMAIL=admin@example.com`
 
-After first deploy, set:
+Set:
 
-- `MOODLE_WWWROOT=https://<your-service-domain>`
+- `MOODLE_WWWROOT=https://${{RAILWAY_PUBLIC_DOMAIN}}`
 
-Use the exact Railway public domain for your service.
+Use the exact Railway public domain for your service if variable expansion is not supported.
 
 ## 5) Add persistent volume
 

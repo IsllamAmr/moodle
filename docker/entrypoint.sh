@@ -6,10 +6,14 @@ MOODLEDATA_DIR="${MOODLE_DATA_ROOT:-/var/moodledata}"
 
 : "${MOODLE_DB_TYPE:=mariadb}"
 : "${MOODLE_DB_HOST:=}"
+: "${MOODLE_DB_PORT:=3306}"
 : "${MOODLE_DB_NAME:=}"
 : "${MOODLE_DB_USER:=}"
 : "${MOODLE_DB_PASS:=}"
 
+if [[ -z "${MOODLE_WWWROOT:-}" && -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]]; then
+    export MOODLE_WWWROOT="https://${RAILWAY_PUBLIC_DOMAIN}"
+fi
 if [[ -z "${MOODLE_WWWROOT:-}" && -n "${RAILWAY_STATIC_URL:-}" ]]; then
     export MOODLE_WWWROOT="https://${RAILWAY_STATIC_URL}"
 fi
@@ -33,6 +37,7 @@ $configfile = '/var/www/html/config.php';
 $cfg = [
     'dbtype' => getenv('MOODLE_DB_TYPE') ?: 'mariadb',
     'dbhost' => getenv('MOODLE_DB_HOST') ?: '',
+    'dbport' => getenv('MOODLE_DB_PORT') ?: '3306',
     'dbname' => getenv('MOODLE_DB_NAME') ?: '',
     'dbuser' => getenv('MOODLE_DB_USER') ?: '',
     'dbpass' => getenv('MOODLE_DB_PASS') ?: '',
@@ -64,6 +69,7 @@ $lines[] = '';
 $lines[] = '$CFG->dbtype    = ' . var_export($cfg['dbtype'], true) . ';';
 $lines[] = '$CFG->dblibrary = \'native\';';
 $lines[] = '$CFG->dbhost    = ' . var_export($cfg['dbhost'], true) . ';';
+$lines[] = '$CFG->dbport    = ' . var_export($cfg['dbport'], true) . ';';
 $lines[] = '$CFG->dbname    = ' . var_export($cfg['dbname'], true) . ';';
 $lines[] = '$CFG->dbuser    = ' . var_export($cfg['dbuser'], true) . ';';
 $lines[] = '$CFG->dbpass    = ' . var_export($cfg['dbpass'], true) . ';';
@@ -99,6 +105,8 @@ fi
 if [[ "${MOODLE_AUTO_INSTALL:-false}" == "true" ]]; then
     if php "${MOODLE_DIR}/admin/cli/isinstalled.php" >/dev/null 2>&1; then
         echo "Moodle is already installed. Skipping auto-install."
+    elif [[ -z "${MOODLE_DB_HOST}" || -z "${MOODLE_DB_NAME}" || -z "${MOODLE_DB_USER}" || -z "${MOODLE_DB_PASS}" ]]; then
+        echo "MOODLE_AUTO_INSTALL=true but DB env vars are missing. Starting web server without auto-install."
     else
         php "${MOODLE_DIR}/admin/cli/install.php" \
             --non-interactive \
@@ -108,6 +116,7 @@ if [[ "${MOODLE_AUTO_INSTALL:-false}" == "true" ]]; then
             --dataroot="${MOODLEDATA_DIR}" \
             --dbtype="${MOODLE_DB_TYPE}" \
             --dbhost="${MOODLE_DB_HOST}" \
+            --dbport="${MOODLE_DB_PORT}" \
             --dbname="${MOODLE_DB_NAME}" \
             --dbuser="${MOODLE_DB_USER}" \
             --dbpass="${MOODLE_DB_PASS}" \
