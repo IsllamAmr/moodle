@@ -30,7 +30,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xml \
     curl \
     sodium \
-    && a2enmod rewrite headers expires \
+    && (a2dismod mpm_event || true) \
+    && (a2dismod mpm_worker || true) \
+    && a2enmod mpm_prefork rewrite headers expires \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
