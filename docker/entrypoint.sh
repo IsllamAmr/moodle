@@ -108,18 +108,9 @@ if [[ "${MOODLE_AUTO_INSTALL:-false}" == "true" ]]; then
     elif [[ -z "${MOODLE_DB_HOST}" || -z "${MOODLE_DB_NAME}" || -z "${MOODLE_DB_USER}" || -z "${MOODLE_DB_PASS}" ]]; then
         echo "MOODLE_AUTO_INSTALL=true but DB env vars are missing. Starting web server without auto-install."
     else
-        php "${MOODLE_DIR}/admin/cli/install.php" \
-            --non-interactive \
+        php "${MOODLE_DIR}/admin/cli/install_database.php" \
             --agree-license \
             --lang="${MOODLE_LANG}" \
-            --wwwroot="${MOODLE_WWWROOT}" \
-            --dataroot="${MOODLEDATA_DIR}" \
-            --dbtype="${MOODLE_DB_TYPE}" \
-            --dbhost="${MOODLE_DB_HOST}" \
-            --dbport="${MOODLE_DB_PORT}" \
-            --dbname="${MOODLE_DB_NAME}" \
-            --dbuser="${MOODLE_DB_USER}" \
-            --dbpass="${MOODLE_DB_PASS}" \
             --fullname="${MOODLE_SITE_FULLNAME}" \
             --shortname="${MOODLE_SITE_SHORTNAME}" \
             --adminuser="${MOODLE_ADMIN_USER}" \
