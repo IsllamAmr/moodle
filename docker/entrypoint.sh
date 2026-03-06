@@ -69,14 +69,13 @@ $lines[] = '';
 $lines[] = '$CFG->dbtype    = ' . var_export($cfg['dbtype'], true) . ';';
 $lines[] = '$CFG->dblibrary = \'native\';';
 $lines[] = '$CFG->dbhost    = ' . var_export($cfg['dbhost'], true) . ';';
-$lines[] = '$CFG->dbport    = ' . var_export($cfg['dbport'], true) . ';';
 $lines[] = '$CFG->dbname    = ' . var_export($cfg['dbname'], true) . ';';
 $lines[] = '$CFG->dbuser    = ' . var_export($cfg['dbuser'], true) . ';';
 $lines[] = '$CFG->dbpass    = ' . var_export($cfg['dbpass'], true) . ';';
 $lines[] = '$CFG->prefix    = ' . var_export($cfg['prefix'], true) . ';';
 $lines[] = '$CFG->dboptions = array (';
 $lines[] = '  \'dbpersist\' => 0,';
-$lines[] = '  \'dbport\' => \'\',';
+$lines[] = '  \'dbport\' => ' . var_export($cfg['dbport'], true) . ',';
 $lines[] = '  \'dbsocket\' => \'\',';
 $lines[] = '  \'dbcollation\' => \'utf8mb4_unicode_ci\',';
 $lines[] = ');';
@@ -108,14 +107,34 @@ if [[ "${MOODLE_AUTO_INSTALL:-false}" == "true" ]]; then
     elif [[ -z "${MOODLE_DB_HOST}" || -z "${MOODLE_DB_NAME}" || -z "${MOODLE_DB_USER}" || -z "${MOODLE_DB_PASS}" ]]; then
         echo "MOODLE_AUTO_INSTALL=true but DB env vars are missing. Starting web server without auto-install."
     else
-        php "${MOODLE_DIR}/admin/cli/install_database.php" \
-            --agree-license \
-            --lang="${MOODLE_LANG}" \
-            --fullname="${MOODLE_SITE_FULLNAME}" \
-            --shortname="${MOODLE_SITE_SHORTNAME}" \
-            --adminuser="${MOODLE_ADMIN_USER}" \
-            --adminpass="${MOODLE_ADMIN_PASS}" \
-            --adminemail="${MOODLE_ADMIN_EMAIL}"
+        db_ready=0
+        for i in {1..20}; do
+            if php -r '$h=getenv("MOODLE_DB_HOST"); $p=(int)(getenv("MOODLE_DB_PORT") ?: 3306); $u=getenv("MOODLE_DB_USER"); $pw=getenv("MOODLE_DB_PASS"); $n=getenv("MOODLE_DB_NAME"); $m=@new mysqli($h,$u,$pw,$n,$p); if ($m->connect_errno) { exit(1); } exit(0);' >/dev/null 2>&1; then
+                db_ready=1
+                break
+            fi
+            echo "Waiting for database... attempt ${i}/20"
+            sleep 3
+        done
+
+        if [[ "${db_ready}" -eq 1 ]]; then
+            set +e
+            php "${MOODLE_DIR}/admin/cli/install_database.php" \
+                --agree-license \
+                --lang="${MOODLE_LANG}" \
+                --fullname="${MOODLE_SITE_FULLNAME}" \
+                --shortname="${MOODLE_SITE_SHORTNAME}" \
+                --adminuser="${MOODLE_ADMIN_USER}" \
+                --adminpass="${MOODLE_ADMIN_PASS}" \
+                --adminemail="${MOODLE_ADMIN_EMAIL}"
+            install_exit=$?
+            set -e
+            if [[ "${install_exit}" -ne 0 ]]; then
+                echo "Auto-install failed with exit code ${install_exit}. Continuing startup so logs/UI stay available."
+            fi
+        else
+            echo "Database is not reachable after retries. Continuing startup without auto-install."
+        fi
     fi
 fi
 
