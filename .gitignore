@@ -1,5 +1,6 @@
 /config.php
 /moodledata/
+/tools/
 /phpunit.xml
 /behat.yml
 /.idea/

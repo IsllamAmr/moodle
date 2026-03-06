@@ -1,0 +1,11 @@
+.git
+.github
+.gitignore
+config.php
+moodledata
+node_modules
+*.log
+tools
+localhostrun.out.log
+localhostrun.err.log
+localtunnel.log
