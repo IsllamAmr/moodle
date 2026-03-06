@@ -1,0 +1,9 @@
+/config.php
+/moodledata/
+/phpunit.xml
+/behat.yml
+/.idea/
+/.vscode/
+/.DS_Store
+Thumbs.db
+*.log
